@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title-meta">SPYXAPP - Direktori Aplikasi & Unduhan Modern</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .spectrum-container {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #090d16 0%, #111827 50%, #030712 100%);
+        }
+        canvas#spectrum-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+
+    <header class="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-500/30">
+                    S
+                </div>
+                <span id="nav-brand-title" class="text-xl font-extrabold tracking-wider bg-gradient-to-r from-emerald-500 to-teal-400 bg-clip-text text-transparent">
+                    SPYXAPP
+                </span>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" aria-label="Ganti Tema" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+
+                <!-- Add App Button (Owner Only - Hidden by default) -->
+                <button id="btn-add-app" onclick="openAddModal()" class="hidden px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm transition shadow-lg shadow-emerald-600/20 items-center space-x-1.5">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="hidden sm:inline">Tambah Aplikasi</span>
+                </button>
+
+                <!-- Owner Account / Auth Control -->
+                <div id="auth-action-container">
+                    <button onclick="openLoginModal()" class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-sm transition">
+                        Masuk Pemilik
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="spectrum-container py-24 px-4 text-center relative">
+        <canvas id="spectrum-canvas"></canvas>
+
+        <div class="max-w-3xl mx-auto relative z-10">
+            <span class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 inline-block mb-4">
+                Direktori Unduhan Resmi & Aman
+            </span>
+            <h1 id="hero-title" class="text-4xl sm:text-5xl font-black text-white tracking-tight mb-6">
+                Temukan & Unduh Aplikasi Terbaik di <span class="text-emerald-400">SPYXAPP</span>
+            </h1>
+            <p id="hero-bio" class="text-slate-300 text-base sm:text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
+                Platform unduhan perangkat lunak modern dengan tautan langsung, aman, cepat, dan terkurasi untuk Anda.
+            </p>
+
+            <!-- Search Bar -->
+            <div class="relative max-w-xl mx-auto">
+                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="search-input" oninput="filterApps()" placeholder="Cari nama aplikasi atau kategori..." 
+                    class="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-2xl backdrop-blur-md">
+            </div>
+        </div>
+    </section>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-grow w-full">
+        <!-- Categories Filter -->
+        <div class="flex items-center space-x-2 overflow-x-auto pb-4 mb-8 scrollbar-none" id="category-filters">
+            <button onclick="filterCategory('Semua')" class="category-btn px-4 py-2 rounded-xl text-sm font-medium bg-emerald-600 text-white transition whitespace-nowrap shadow-sm">Semua</button>
+            <button onclick="filterCategory('Produktivitas')" class="category-btn px-4 py-2 rounded-xl text-sm font-medium bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition whitespace-nowrap">Produktivitas</button>
+            <button onclick="filterCategory('Desain')" class="category-btn px-4 py-2 rounded-xl text-sm font-medium bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition whitespace-nowrap">Desain</button>
+            <button onclick="filterCategory('Utilitas')" class="category-btn px-4 py-2 rounded-xl text-sm font-medium bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition whitespace-nowrap">Utilitas</button>
+            <button onclick="filterCategory('Multimedia')" class="category-btn px-4 py-2 rounded-xl text-sm font-medium bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition whitespace-nowrap">Multimedia</button>
+        </div>
+
+        <!-- App Grid -->
+        <div id="app-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- App cards populated via JavaScript -->
+        </div>
+    </main>
+
+    <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+        <p>&copy; 2026 SPYXAPP. Hak Cipta Dilindungi.</p>
+    </footer>
+
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 dark:bg-slate-800 text-white px-5 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center space-x-3">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-msg" class="text-sm font-medium">Notifikasi</span>
+    </div>
+
+    <div id="login-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Masuk Sebagai Pemilik</h3>
+                <button onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">Username Pemilik</label>
+                    <input type="text" id="login-username" required placeholder="•••••••" 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">Kata Sandi</label>
+                    <input type="password" id="login-password" required placeholder="••••••••" 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition shadow-lg shadow-emerald-600/20">
+                    Masuk
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Pengaturan Akun Pemilik</h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleSaveSettings(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">Username Baru</label>
+                    <input type="text" id="settings-username" required 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">Kata Sandi Baru (Kosongkan jika tetap)</label>
+                    <input type="password" id="settings-password" placeholder="Biarkan kosong jika tidak diubah" 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">Judul Website Utama</label>
+                    <input type="text" id="settings-title" required 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">Bio / Deskripsi Hero</label>
+                    <textarea id="settings-bio" rows="3" required 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500"></textarea>
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition shadow-lg shadow-emerald-600/20">
+                    Simpan Perubahan
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="add-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-app-title" class="text-xl font-bold">Tambah Aplikasi Baru</h3>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleSaveApp(event)" class="space-y-4">
+                <input type="hidden" id="app-edit-id">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">Nama Aplikasi</label>
+                    <input type="text" id="app-name" required placeholder="cth: SPYX Studio" 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">Kategori</label>
+                        <select id="app-category" class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                            <option value="Produktivitas">Produktivitas</option>
+                            <option value="Desain">Desain</option>
+                            <option value="Utilitas">Utilitas</option>
+                            <option value="Multimedia">Multimedia</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">Platform</label>
+                        <input type="text" id="app-platform" required placeholder="Windows / macOS" 
+                            class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">Ukuran File</label>
+                        <input type="text" id="app-size" required placeholder="cth: 45.2 MB" 
+                            class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">Versi</label>
+                        <input type="text" id="app-version" required placeholder="cth: v1.0.0" 
+                            class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">URL Tautan Unduhan</label>
+                    <input type="url" id="app-url" required placeholder="https://example.com/download" 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider mb-2 text-slate-500">Deskripsi Singkat</label>
+                    <textarea id="app-desc" rows="3" required placeholder="Jelaskan fitur utama aplikasi..." 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:outline-none focus:border-emerald-500"></textarea>
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition shadow-lg shadow-emerald-600/20">
+                    Simpan Aplikasi
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        let apps = JSON.parse(localStorage.getItem('spyxapp_apps')) || [];
+        let currentCategory = 'Semua';
+        let isOwnerLoggedIn = localStorage.getItem('spyxapp_owner_logged') === 'true';
+
+        let ownerAccount = JSON.parse(localStorage.getItem('spyxapp_owner_account')) || {
+            username: 'SPYXAPP',
+            password: 'spyx123',
+            siteTitle: 'SPYXAPP',
+            siteBio: 'Platform unduhan perangkat lunak modern dengan tautan langsung, aman, cepat, dan terkurasi untuk Anda.'
+        };
+
+        // Memaksa pembaruan kredensial otomatis jika memori browser masih menyimpan akun default yang lama
+        if (ownerAccount.username === 'Pemilik' && ownerAccount.password === 'mysecretpassword123') {
+            ownerAccount.username = 'SPYXAPP';
+            ownerAccount.password = 'spyx123';
+            localStorage.setItem('spyxapp_owner_account', JSON.stringify(ownerAccount));
+        }
+
+        // Apply saved owner info to UI
+        document.getElementById('nav-brand-title').textContent = ownerAccount.siteTitle;
+        document.getElementById('page-title-meta').textContent = `${ownerAccount.siteTitle} - Direktori Aplikasi & Unduhan Modern`;
+        document.getElementById('hero-bio').textContent = ownerAccount.siteBio;
+
+        // Toast Notification Helper (No alert())
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toast-msg');
+            msg.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Initialize Moving Spectrum Canvas Animation
+        const canvas = document.getElementById('spectrum-canvas');
+        const ctx = canvas.getContext('2d');
+        let animationId;
+
+        function initSpectrum() {
+            function resize() {
+                canvas.width = canvas.parentElement.offsetWidth;
+                canvas.height = canvas.parentElement.offsetHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            const barsCount = 45;
+            let phase = 0;
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const barWidth = canvas.width / barsCount;
+                phase += 0.04;
+
+                for (let i = 0; i < barsCount; i++) {
+                    const heightFactor = Math.sin(phase + i * 0.25) * 0.5 + 0.5;
+                    const height = heightFactor * (canvas.height * 0.75) + 15;
+                    const x = i * barWidth;
+                    const y = canvas.height - height;
+
+                    const gradient = ctx.createLinearGradient(0, y, 0, canvas.height);
+                    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.7)');
+                    gradient.addColorStop(1, 'rgba(5, 150, 105, 0.02)');
+
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(x + 2, y, barWidth - 4, height);
+                }
+                animationId = requestAnimationFrame(draw);
+            }
+            draw();
+        }
+        initSpectrum();
+
+        // Theme Toggle Function
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                icon.className = "fa-solid fa-sun";
+            } else {
+                html.classList.add('dark');
+                icon.className = "fa-solid fa-moon";
+            }
+        }
+
+        // Update Auth UI State
+        function updateAuthUI() {
+            const btnAdd = document.getElementById('btn-add-app');
+            const authContainer = document.getElementById('auth-action-container');
+
+            if (isOwnerLoggedIn) {
+                btnAdd.classList.remove('hidden');
+                btnAdd.classList.add('flex');
+                authContainer.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openSettingsModal()" class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-emerald-500 transition flex items-center space-x-1.5" title="Pengaturan Akun">
+                            <i class="fa-solid fa-gear"></i>
+                            <span class="hidden md:inline">${ownerAccount.username}</span>
+                        </button>
+                        <button onclick="handleLogout()" class="px-3 py-2 rounded-xl border border-rose-200 dark:border-rose-900/50 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-500 text-xs font-medium transition" title="Keluar">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                btnAdd.classList.add('hidden');
+                btnAdd.classList.remove('flex');
+                authContainer.innerHTML = `
+                    <button onclick="openLoginModal()" class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium text-sm transition">
+                        Masuk Pemilik
+                    </button>
+                `;
+            }
+        }
+        updateAuthUI();
+
+        // Render Apps
+        function renderApps(list = apps) {
+            const grid = document.getElementById('app-grid');
+            if (list.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-20 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
+                        <i class="fa-solid fa-box-open text-4xl text-slate-400 mb-3"></i>
+                        <p class="text-slate-500 dark:text-slate-400 font-medium">Belum ada aplikasi yang diunggah.</p>
+                        <p class="text-xs text-slate-400 mt-1">${isOwnerLoggedIn ? 'Gunakan tombol "Tambah Aplikasi" di atas untuk mulai mengunggah.' : 'Masuk sebagai pemilik untuk mulai mengunggah aplikasi.'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = list.map(app => `
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 flex flex-col justify-between shadow-sm hover:shadow-xl transition group">
+                    <div>
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <span class="px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-500">${app.category}</span>
+                                <h3 class="text-lg font-bold mt-2 group-hover:text-emerald-500 transition">${app.name}</h3>
+                            </div>
+                            <div class="text-right text-xs text-slate-400">
+                                <span class="font-semibold text-slate-700 dark:text-slate-300">${app.version}</span>
+                            </div>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-2">${app.description}</p>
+                        
+                        <div class="flex items-center space-x-4 text-xs text-slate-500 dark:text-slate-400 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
+                            <span><i class="fa-solid fa-desktop mr-1"></i> ${app.platform}</span>
+                            <span><i class="fa-solid fa-hard-drive mr-1"></i> ${app.size}</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center justify-between pt-2">
+                            <div class="flex items-center space-x-2">
+                                <button onclick="shareApp(${app.id})" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-medium transition flex items-center space-x-1.5" title="Bagikan Tautan">
+                                    <i class="fa-solid fa-share-nodes text-emerald-500"></i>
+                                    <span>Bagikan</span>
+                                </button>
+                                ${isOwnerLoggedIn ? `
+                                    <button onclick="openEditModal(${app.id})" class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-amber-500 text-xs font-medium transition" title="Edit Aplikasi">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button onclick="deleteApp(${app.id})" class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-500 text-xs font-medium transition" title="Hapus Aplikasi">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                            
+                            <a href="${app.url}" target="_blank" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition shadow-md shadow-emerald-600/20 flex items-center space-x-1.5">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Unduh</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Share App Feature
+        function shareApp(id) {
+            const app = apps.find(a => a.id === id);
+            if (!app) return;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(app.url).then(() => {
+                    showToast(`Tautan "${app.name}" berhasil disalin!`);
+                }).catch(() => {
+                    fallbackShare(app.url);
+                });
+            } else {
+                fallbackShare(app.url);
+            }
+        }
+
+        function fallbackShare(url) {
+            const el = document.createElement('textarea');
+            el.value = url;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("Tautan unduhan berhasil disalin!");
+        }
+
+        // Filter Category
+        function filterCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                if (btn.textContent.trim() === category) {
+                    btn.className = "category-btn px-4 py-2 rounded-xl text-sm font-medium bg-emerald-600 text-white transition whitespace-nowrap shadow-sm";
+                } else {
+                    btn.className = "category-btn px-4 py-2 rounded-xl text-sm font-medium bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition whitespace-nowrap";
+                }
+            });
+            filterApps();
+        }
+
+        // Search & Filter
+        function filterApps() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filtered = apps.filter(app => {
+                const matchesCategory = currentCategory === 'Semua' || app.category === currentCategory;
+                const matchesQuery = app.name.toLowerCase().includes(query) || app.description.toLowerCase().includes(query) || app.category.toLowerCase().includes(query);
+                return matchesCategory && matchesQuery;
+            });
+            renderApps(filtered);
+        }
+
+        // Modal Controls
+        function openLoginModal() { document.getElementById('login-modal').classList.remove('hidden'); }
+        function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
+
+        function openSettingsModal() {
+            document.getElementById('settings-username').value = ownerAccount.username;
+            document.getElementById('settings-password').value = "";
+            document.getElementById('settings-title').value = ownerAccount.siteTitle;
+            document.getElementById('settings-bio').value = ownerAccount.siteBio;
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+        function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
+
+        function openAddModal() {
+            if (!isOwnerLoggedIn) {
+                showToast("Akses ditolak! Silakan masuk sebagai pemilik.");
+                openLoginModal();
+                return;
+            }
+            document.getElementById('modal-app-title').textContent = "Tambah Aplikasi Baru";
+            document.getElementById('app-edit-id').value = "";
+            document.querySelector('#add-modal form').reset();
+            document.getElementById('add-modal').classList.remove('hidden');
+        }
+
+        function openEditModal(id) {
+            if (!isOwnerLoggedIn) return;
+            const app = apps.find(a => a.id === id);
+            if (!app) return;
+            document.getElementById('modal-app-title').textContent = "Edit Aplikasi";
+            document.getElementById('app-edit-id').value = app.id;
+            document.getElementById('app-name').value = app.name;
+            document.getElementById('app-category').value = app.category;
+            document.getElementById('app-platform').value = app.platform;
+            document.getElementById('app-size').value = app.size;
+            document.getElementById('app-version').value = app.version;
+            document.getElementById('app-url').value = app.url;
+            document.getElementById('app-desc').value = app.description;
+            document.getElementById('add-modal').classList.remove('hidden');
+        }
+
+        function closeAddModal() { document.getElementById('add-modal').classList.add('hidden'); }
+
+        // Login Handler
+        function handleLogin(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('login-username').value.trim();
+            const passwordInput = document.getElementById('login-password').value;
+
+            if (usernameInput === ownerAccount.username && passwordInput === ownerAccount.password) {
+                isOwnerLoggedIn = true;
+                localStorage.setItem('spyxapp_owner_logged', 'true');
+                closeLoginModal();
+                updateAuthUI();
+                renderApps();
+                showToast("Berhasil masuk sebagai pemilik!");
+            } else {
+                showToast("Username atau kata sandi salah!");
+            }
+        }
+
+        // Logout Handler
+        function handleLogout() {
+            isOwnerLoggedIn = false;
+            localStorage.setItem('spyxapp_owner_logged', 'false');
+            updateAuthUI();
+            renderApps();
+            showToast("Anda telah keluar.");
+        }
+
+        // Save Owner Settings Handler
+        function handleSaveSettings(e) {
+            e.preventDefault();
+            const newUsername = document.getElementById('settings-username').value.trim();
+            const newPassword = document.getElementById('settings-password').value;
+            const newTitle = document.getElementById('settings-title').value.trim();
+            const newBio = document.getElementById('settings-bio').value.trim();
+
+            ownerAccount.username = newUsername;
+            if (newPassword) {
+                ownerAccount.password = newPassword;
+            }
+            ownerAccount.siteTitle = newTitle;
+            ownerAccount.siteBio = newBio;
+
+            localStorage.setItem('spyxapp_owner_account', JSON.stringify(ownerAccount));
+            
+            document.getElementById('nav-brand-title').textContent = ownerAccount.siteTitle;
+            document.getElementById('page-title-meta').textContent = `${ownerAccount.siteTitle} - Direktori Aplikasi & Unduhan Modern`;
+            document.getElementById('hero-bio').textContent = ownerAccount.siteBio;
+
+            closeSettingsModal();
+            updateAuthUI();
+            showToast("Pengaturan akun berhasil diperbarui!");
+        }
+
+        // Add / Edit App Handler
+        function handleSaveApp(e) {
+            e.preventDefault();
+            if (!isOwnerLoggedIn) {
+                showToast("Akses ditolak!");
+                return;
+            }
+
+            const editId = document.getElementById('app-edit-id').value;
+            const appData = {
+                name: document.getElementById('app-name').value,
+                category: document.getElementById('app-category').value,
+                platform: document.getElementById('app-platform').value,
+                size: document.getElementById('app-size').value,
+                version: document.getElementById('app-version').value,
+                url: document.getElementById('app-url').value,
+                description: document.getElementById('app-desc').value
+            };
+
+            if (editId) {
+                apps = apps.map(app => app.id == editId ? { ...app, ...appData } : app);
+                showToast("Aplikasi berhasil diperbarui!");
+            } else {
+                const newApp = {
+                    id: Date.now(),
+                    ...appData
+                };
+                apps.unshift(newApp);
+                showToast("Aplikasi baru berhasil dipublikasikan!");
+            }
+
+            localStorage.setItem('spyxapp_apps', JSON.stringify(apps));
+            closeAddModal();
+            filterApps();
+        }
+
+        // Delete App Handler
+        function deleteApp(id) {
+            if (!isOwnerLoggedIn) return;
+            apps = apps.filter(app => app.id !== id);
+            localStorage.setItem('spyxapp_apps', JSON.stringify(apps));
+            filterApps();
+            showToast("Aplikasi berhasil dihapus.");
+        }
+
+        // Initial Render
+        renderApps();
+    </script>
+</body>
+</html>
